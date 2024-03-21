@@ -15,7 +15,7 @@ class GridPoint:
         self.t = t
 
 class Grid:
-    def __init__(self, m, n) -> None:
+    def __init__(self, m, n, init=False) -> None:
         self.m = m
         self.n = n
         self.grid = [GridPoint() for _ in range(m*n)]
@@ -25,19 +25,28 @@ class Grid:
         sigma_y = m//4
         sigma_x = n//4
 
-        for i in range(m*n):
-            y = i // n
-            x = i % n
+        if init:
+            for i in range(m*n):
+                y = i // n
+                x = i % n
 
-            rho = Utils.gaussian(x, y, mu_x, mu_y, sigma_x,sigma_y)
-            p = 101325
-            ux = 2
-            uy = ux//2
+                rho = Utils.gaussian(x, y, mu_x, mu_y, sigma_x,sigma_y)
+                p = 101325
+                ux = 2
+                uy = 0*ux//2
 
-            self.grid[i].rho = rho
-            self.grid[i].p = p
-            self.grid[i].ux = ux
-            self.grid[i].uy = uy
+                self.grid[i].rho = rho
+                self.grid[i].p = p
+                self.grid[i].ux = ux
+                self.grid[i].uy = uy
+
+    def get_at(self, x, y):
+        index = y * self.n + x
+        return self.grid[index]
+    
+    def set_at(self, x, y, newpoint):
+        index = y * self.n + x
+        self.grid[index] = newpoint
 
     def show_grid(self):
         rho_values = np.array([point.rho for point in self.grid]).reshape((self.m, self.n))
@@ -46,9 +55,9 @@ class Grid:
         uy = np.array([point.uy for point in self.grid]).reshape((self.m, self.n))
 
         self.plot(rho_values)
-        self.plot(p)
-        self.plot(ux)
-        self.plot(uy)
+        # self.plot(p)
+        # self.plot(ux)
+        # self.plot(uy)
 
     def plot(self, values):
         plt.imshow(values, origin='lower', cmap='viridis')
@@ -56,9 +65,3 @@ class Grid:
         plt.xlabel('X')
         plt.ylabel('Y')
         plt.show()
-
-    def get_grid(self):
-        return self.grid
-    
-    def set_grid(self, grid):
-        self.grid = grid
