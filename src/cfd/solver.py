@@ -1,5 +1,5 @@
 import numpy as np
-from .grids import Grid, GridPoint
+from .grids import Grid
 
 class Solver:
     def __init__(self, dt, total_steps, grid) -> None:
@@ -8,15 +8,13 @@ class Solver:
         self.grid = grid
         self.new_grid = None
         self.k = 1.4
-
-    def gauss_seidel(self):
-        pass
+        self.gauss_seidel_iters = 15
 
     def step_once(self, dt):
         m, n = self.grid.m, self.grid.n
         self.new_grid = Grid(m, n)
     
-        for _ in range(10):
+        for _ in range(self.gauss_seidel_iters):
             for y in range(1,self.grid.m-1):
                 for x in range(1,self.grid.n-1):
                     self.update_rho(x, y, dt)
