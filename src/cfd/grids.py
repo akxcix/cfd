@@ -14,6 +14,21 @@ class GridPoint:
         self.p = p
         self.t = t
 
+    def __add__(self, other):
+        return GridPoint(self.ux + other.ux, self.uy + other.uy, 
+                         self.rho + other.rho, self.p + other.p, 
+                         self.t + other.t)
+    
+    def __mul__(self, k):
+        if not isinstance(k, (int, float)):
+            raise TypeError("The multiplier must be a number.")
+        return GridPoint(self.ux * k, self.uy * k, 
+                         self.rho * k, self.p * k, 
+                         self.t * k)
+
+    def __rmul__(self, k):
+        return self.__mul__(k)
+
 class Grid:
     def __init__(self, m, n, init=False) -> None:
         self.m = m
