@@ -15,3 +15,9 @@ class Utils:
         g = -1 * (e + f)
 
         return np.exp(g)
+    
+    def random_sign():
+        r = np.random.rand()
+        if r < 0.5:
+            return -1
+        return 1

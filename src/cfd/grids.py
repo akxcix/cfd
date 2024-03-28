@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from .utils import Utils
 
 
@@ -47,8 +48,8 @@ class Grid:
 
                 rho = Utils.gaussian(x, y, mu_x, mu_y, sigma_x,sigma_y)
                 p = 101325
-                ux = 2
-                uy = 0*ux//2
+                ux = np.random.rand() * Utils.random_sign()
+                uy = np.random.rand() * Utils.random_sign()
 
                 self.grid[i].rho = rho
                 self.grid[i].p = p
@@ -73,6 +74,18 @@ class Grid:
         # self.plot(p)
         # self.plot(ux)
         # self.plot(uy)
+
+    def animate_2d(solutions):
+        fig, ax = plt.subplots(figsize=(6, 5))
+        
+        def update_plot(frame_number):
+            ax.clear()
+            contour = ax.contourf(X, Y, solutions[frame_number], levels=50, cmap='viridis')
+            return contour,
+        
+        ani = animation.FuncAnimation(fig, update_plot, frames=len(solutions), blit=True)
+        plt.close(fig)
+        return ani
 
     def plot(self, values):
         plt.imshow(values, origin='lower', cmap='viridis')
