@@ -1,4 +1,4 @@
 from .eulerian import Eulerian
-from .solver import Solver
 from .grids import Grid
+from .solver import Solver
 from .utils import Utils

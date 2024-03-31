@@ -1,16 +1,20 @@
-from .grids import Grid
 import numpy as np
 
+from .grids import Grid
+
+
 class Eulerian:
-    def __init__(self, dt, total_steps, grid) -> None:
+    def __init__(self, dt: float, total_steps: int, grid: Grid) -> None:
         self.total_steps = total_steps
         self.dt = dt
         self.grid = grid
         self.gamma = 1.4
 
-    def derivative(self, i, j, attribute):
+    def derivative(self, i: int, j: int, attribute: str):
         """Calculate the derivative using central differences."""
-        attribute_grid = np.array([getattr(point, attribute) for point in self.grid.grid]).reshape(self.grid.m, self.grid.n)
+        attribute_grid = np.array(
+            [getattr(point, attribute) for point in self.grid.grid]
+        ).reshape(self.grid.m, self.grid.n)
 
         # Derivative in x-direction
         if j > 0 and j < self.grid.n - 1:
@@ -26,7 +30,6 @@ class Eulerian:
 
         return d_attribute_dx, d_attribute_dy
 
-
     def step_once(self):
         m, n = self.grid.m, self.grid.n
         new_grid = Grid(m, n)
@@ -35,18 +38,36 @@ class Eulerian:
             for j in range(self.grid.n):
                 index = i * self.grid.n + j
                 current = self.grid.grid[index]
-                
+
                 # Compute derivatives for rho, ux, uy, and p
-                drho_dx, drho_dy = self.derivative(i, j, 'rho')
-                dux_dx, dux_dy = self.derivative(i, j, 'ux')
-                duy_dx, duy_dy = self.derivative(i, j, 'uy')
-                dp_dx, dp_dy = self.derivative(i, j, 'p')
+                drho_dx, drho_dy = self.derivative(i, j, "rho")
+                dux_dx, dux_dy = self.derivative(i, j, "ux")
+                duy_dx, duy_dy = self.derivative(i, j, "uy")
+                dp_dx, dp_dy = self.derivative(i, j, "p")
 
                 # Update equations - simplified, illustrative calculations
-                new_rho = current.rho - self.dt * (current.ux * drho_dx + current.rho * dux_dx + current.uy * drho_dy + current.rho * duy_dy)
-                new_ux = current.ux - self.dt * (current.ux * dux_dx + dux_dy * current.uy + (1 / current.rho) * dp_dx)
-                new_uy = current.uy - self.dt * (current.uy * duy_dy + duy_dx * current.ux + (1 / current.rho) * dp_dy)
-                new_p = current.p - self.dt * (current.ux * dp_dx + current.p * dux_dx + current.uy * dp_dy + current.p * duy_dy)
+                new_rho = current.rho - self.dt * (
+                    current.ux * drho_dx
+                    + current.rho * dux_dx
+                    + current.uy * drho_dy
+                    + current.rho * duy_dy
+                )
+                new_ux = current.ux - self.dt * (
+                    current.ux * dux_dx
+                    + dux_dy * current.uy
+                    + (1 / current.rho) * dp_dx
+                )
+                new_uy = current.uy - self.dt * (
+                    current.uy * duy_dy
+                    + duy_dx * current.ux
+                    + (1 / current.rho) * dp_dy
+                )
+                new_p = current.p - self.dt * (
+                    current.ux * dp_dx
+                    + current.p * dux_dx
+                    + current.uy * dp_dy
+                    + current.p * duy_dy
+                )
 
                 # Update the new grid point
                 new_grid.grid[index].rho = new_rho
