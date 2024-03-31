@@ -6,20 +6,20 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .utils import Utils
+from . import utils
 
 
-@dcls.dataclass(frozen=True)
+@dcls.dataclass
 class GridPoint:
     """
     a particular point x,y on the grid
     """
 
-    ux: float
-    uy: float
-    rho: float
-    p: float
-    t: float
+    ux: float = 0
+    uy: float = 0
+    rho: float = 0
+    p: float = 0
+    t: float = 0
 
     def __add__(self, other) -> GridPoint:
         return GridPoint(
@@ -41,7 +41,7 @@ class GridPoint:
 
 
 class Grid:
-    def __init__(self, m, n, init=False) -> None:
+    def __init__(self, m: int, n: int, init: bool = False) -> None:
         self.m = m
         self.n = n
         self.grid = [GridPoint() for _ in range(m * n)]
@@ -56,23 +56,34 @@ class Grid:
                 y = i // n
                 x = i % n
 
-                rho = Utils.gaussian(x, y, mu_x, mu_y, sigma_x, sigma_y)
+                rho = utils.gaussian(x, y, mu_x, mu_y, sigma_x, sigma_y)
                 p = 101325
-                ux = np.random.rand() * Utils.random_sign()
-                uy = np.random.rand() * Utils.random_sign()
+                ux = np.random.rand() * utils.random_sign()
+                uy = np.random.rand() * utils.random_sign()
 
                 self.grid[i].rho = rho
                 self.grid[i].p = p
                 self.grid[i].ux = ux
                 self.grid[i].uy = uy
 
-    def get_at(self, x, y):
-        index = y * self.n + x
+    def __getitem__(self, key: tuple[int, int]) -> GridPoint:
+        x, y = key
+        return self._get_at(x, y)
+
+    def __setitem__(self, key: tuple[int, int], newpoint: GridPoint):
+        x, y = key
+        self._set_at(x, y, newpoint)
+
+    def _get_at(self, x: int, y: int):
+        index = self._index(x, y)
         return self.grid[index]
 
-    def set_at(self, x, y, newpoint):
-        index = y * self.n + x
+    def _set_at(self, x: int, y: int, newpoint: GridPoint):
+        index = self._index(x, y)
         self.grid[index] = newpoint
+
+    def _index(self, x: int, y: int) -> int:
+        return y * self.n + x
 
     def show_grid(self):
         rho_values = np.array([point.rho for point in self.grid]).reshape(
