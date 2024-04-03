@@ -1,12 +1,12 @@
 import cfd
+import fire
 
-
-def main():
-    grid = cfd.Grid(10, 20, init=True)
+def main(dt=0.1):
+    grid = cfd.Grid(200, 500, init=True)
     # grid.show_grid()
-    solver = cfd.Solver(0.1, 500, grid)
+    solver = cfd.Solver(dt, 500, grid)
     solver.run_simulation()
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)

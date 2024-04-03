@@ -53,8 +53,8 @@ class Grid:
 
         if init:
             for i in range(m * n):
-                y = i // n
-                x = i % n
+                y = i
+                x = i
 
                 rho = utils.gaussian(x, y, mu_x, mu_y, sigma_x, sigma_y)
                 p = 101325
