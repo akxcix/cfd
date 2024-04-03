@@ -21,7 +21,15 @@ class GridPoint:
     p: float = 0
     t: float = 0
 
-    def __add__(self, other) -> GridPoint:
+    def __add__(self, other: GridPoint | int | float) -> GridPoint:
+        if isinstance(other, (int, float)):
+            return GridPoint(
+                self.ux + other,
+                self.uy + other,
+                self.rho + other,
+                self.p + other,
+                self.t + other,
+            )
         return GridPoint(
             self.ux + other.ux,
             self.uy + other.uy,
@@ -29,6 +37,9 @@ class GridPoint:
             self.p + other.p,
             self.t + other.t,
         )
+
+    def __radd__(self, other: GridPoint | int | float) -> GridPoint:
+        return other + self
 
     def __mul__(self, k: int | float):
         if not isinstance(k, (int, float)):
@@ -38,6 +49,9 @@ class GridPoint:
 
     def __rmul__(self, k: int | float):
         return self.__mul__(k)
+
+    def __truediv__(self, k: int | float):
+        return self * (1 / k)
 
 
 class Grid:

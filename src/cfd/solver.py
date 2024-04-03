@@ -28,7 +28,7 @@ class Solver:
         self.new_grid = Grid(self.m, self.n)
 
         for _ in range(self.gauss_seidel_iters):
-            self.diffuse_all(x, y, dt)
+            self.diffuse_all(dt)
 
         self._set_bnd()
 
@@ -64,15 +64,18 @@ class Solver:
                 self.diffuse(x, y, dt)
 
     def diffuse(self, x: int, y: int, dt: float):
-        a = dt * self.coeff_diff * self.grid.m * self.grid.n
+        a = dt * self.coeff_diff * self.m * self.n
 
-        newpoint = (
-            self.grid[x, y]
-            + self.grid[x + 1, y]
-            + self.grid[x - 1, y]
-            + self.grid[x, y + 1]
-            + self.grid[x, y - 1]
-        ) * (a / (1 + 4 * a))
+        newpoint = self.grid[x, y] + (
+            (
+                0
+                + self.grid[x + 1, y]
+                + self.grid[x - 1, y]
+                + self.grid[x, y + 1]
+                + self.grid[x, y - 1]
+            )
+            * a
+        ) / (1 + 4 * a)
 
         self.new_grid[x, y] = newpoint
 
