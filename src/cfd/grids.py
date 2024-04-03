@@ -83,7 +83,20 @@ class Grid:
         self.grid[index] = newpoint
 
     def _index(self, x: int, y: int) -> int:
-        return y * self.n + x
+        if not -self.n <= x <= self.n - 1:
+            raise ValueError(
+                "X index out of bounds. "
+                f"Expected to be in the range [{-self.n}, {self.n-1}], "
+                f"got {x}"
+            )
+        if not -self.m <= y <= self.m - 1:
+            raise ValueError(
+                "X index out of bounds. "
+                f"Expected to be in the range [{-self.m}, {self.m-1}], "
+                f"got {y}"
+            )
+
+        return (y % self.m) * self.n + (x % self.n)
 
     def show_grid(self):
         rho_values = np.array([point.rho for point in self.grid]).reshape(

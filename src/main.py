@@ -1,5 +1,7 @@
-import cfd
 import fire
+
+import cfd
+
 
 def main(dt=0.1):
     grid = cfd.Grid(200, 500, init=True)
