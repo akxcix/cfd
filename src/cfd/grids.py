@@ -8,6 +8,11 @@ import numpy as np
 
 from . import utils
 
+@dcls.dataclass
+class Velocity:
+    vx = 0
+    vy = 0
+
 
 @dcls.dataclass
 class GridPoint:
@@ -60,25 +65,27 @@ class Grid:
         self.n = n
         self.grid = [GridPoint() for _ in range(m * n)]
 
-        mu_y = m // 2
-        mu_x = n // 2
+        mu_y = n // 2
+        mu_x = m // 2
         sigma_y = m // 4
         sigma_x = n // 4
 
         if init:
-            for i in range(m * n):
-                y = i
-                x = i
+            for i in range(m):
+                for j in range(n):
+                    idx = self._index(i,j)
 
-                rho = utils.gaussian(x, y, mu_x, mu_y, sigma_x, sigma_y)
-                p = 101325
-                ux = np.random.rand() * utils.random_sign()
-                uy = np.random.rand() * utils.random_sign()
+                    rho = utils.gaussian(i, j, mu_x, mu_y, sigma_x, sigma_y)
+                    p = 101325
+                    ux = np.random.rand() * 7 * utils.random_sign()
+                    uy = np.random.rand() * 7 * utils.random_sign()
+                    # ux = 1
+                    # uy = 1
 
-                self.grid[i].rho = rho
-                self.grid[i].p = p
-                self.grid[i].ux = ux
-                self.grid[i].uy = uy
+                    self.grid[idx].rho = rho
+                    self.grid[idx].p = p
+                    self.grid[idx].ux = ux
+                    self.grid[idx].uy = uy
 
     def __getitem__(self, key: tuple[int, int]) -> GridPoint:
         x, y = key
@@ -97,53 +104,93 @@ class Grid:
         self.grid[index] = newpoint
 
     def _index(self, x: int, y: int) -> int:
-        if not -self.n <= x <= self.n - 1:
-            raise ValueError(
-                "X index out of bounds. "
-                f"Expected to be in the range [{-self.n}, {self.n-1}], "
-                f"got {x}"
-            )
-        if not -self.m <= y <= self.m - 1:
-            raise ValueError(
-                "X index out of bounds. "
-                f"Expected to be in the range [{-self.m}, {self.m-1}], "
-                f"got {y}"
-            )
+        return y * self.m + x
 
-        return (y % self.m) * self.n + (x % self.n)
+    def show_grid(self, min_rho, max_rho, plot_rho=True, plot_p=False, plot_velocity_field=False):
+        rho_values = np.zeros([self.m, self.n])
+        ux_values = np.zeros([self.m, self.n])
+        uy_values = np.zeros([self.m, self.n])
 
-    def show_grid(self):
-        rho_values = np.array([point.rho for point in self.grid]).reshape(
-            (self.m, self.n)
-        )
-        p = np.array([point.p for point in self.grid]).reshape((self.m, self.n))
-        ux = np.array([point.ux for point in self.grid]).reshape((self.m, self.n))
-        uy = np.array([point.uy for point in self.grid]).reshape((self.m, self.n))
+        for i in range(self.m):
+            for j in range(self.n):
+                rho_values[i,j] = self.grid[self._index(i,j)].rho
+                ux_values[i,j] = self.grid[self._index(i,j)].ux
+                uy_values[i,j] = self.grid[self._index(i,j)].uy
+                
+        if plot_rho:
+            self.plot_scalar_field(rho_values, 'Density (rho)', min_rho, max_rho)
+        
+        # if plot_p:
+        #     p_values = np.array([point.p for point in self.grid]).reshape((self.m, self.n))
+        #     self.plot_scalar_field(p_values, 'Pressure (p)')
 
-        self.plot(rho_values)
-        # self.plot(p)
-        # self.plot(ux)
-        # self.plot(uy)
+        if plot_velocity_field:
+            self.plot_velocity_field(ux_values, uy_values)
 
-    def animate_2d(solutions):
-        fig, ax = plt.subplots(figsize=(6, 5))
-
-        def update_plot(frame_number):
-            ax.clear()
-            contour = ax.contourf(
-                X, Y, solutions[frame_number], levels=50, cmap="viridis"
-            )
-            return (contour,)
-
-        ani = animation.FuncAnimation(
-            fig, update_plot, frames=len(solutions), blit=True
-        )
-        plt.close(fig)
-        return ani
-
-    def plot(self, values):
-        plt.imshow(values, origin="lower", cmap="viridis")
-        plt.colorbar(label="Value")
+    def plot_scalar_field(self, values, title, vmin, vmax):
+        plt.figure(figsize=(6, 5))
+        im = plt.imshow(values, origin="lower", cmap="viridis",vmin=vmin, vmax=vmax)
+        plt.colorbar(im, label="Value")
         plt.xlabel("X")
         plt.ylabel("Y")
+        plt.title(title)
         plt.show()
+
+    def plot_velocity_field(self, ux_values, uy_values):
+        Y, X = np.mgrid[0:self.m, 0:self.n]
+        plt.figure(figsize=(6, 5))
+        plt.quiver(X, Y, ux_values, uy_values)
+        plt.xlabel("X")
+        plt.ylabel("Y")
+        plt.title("Velocity Field")
+        plt.xlim(-0.5, self.n-0.5)
+        plt.ylim(-0.5, self.m-0.5)
+        plt.show()
+
+    def animate_grids(self, grid_array):
+        fig, ax = plt.subplots()
+        
+        # Initialize the first frame with the first grid state
+        initial_grid = grid_array[0]
+        rho_values = np.zeros([self.m, self.n])
+        ux_values = np.zeros([self.m, self.n])
+        uy_values = np.zeros([self.m, self.n])
+
+        for i in range(self.m):
+            for j in range(self.n):
+                rho_values[i,j] = initial_grid[self._index(i,j)].rho
+                ux_values[i,j] = initial_grid[self._index(i,j)].ux
+                uy_values[i,j] = initial_grid[self._index(i,j)].uy
+
+        im = ax.imshow(rho_values, origin='lower', cmap='viridis')
+        fig.colorbar(im, ax=ax, label='Density (rho)')
+        
+        def init():
+            # This could also set the figure to a consistent state if needed
+            return im,
+
+        def update(frame):
+            # Update the plot for the current frame
+            current_grid = grid_array[frame]
+
+            rho_values = np.zeros([self.m, self.n])
+            ux_values = np.zeros([self.m, self.n])
+            uy_values = np.zeros([self.m, self.n])
+
+            for i in range(self.m):
+                for j in range(self.n):
+                    rho_values[i,j] = current_grid[self._index(i,j)].rho
+                    ux_values[i,j] = current_grid[self._index(i,j)].ux
+                    uy_values[i,j] = current_grid[self._index(i,j)].uy
+                
+
+            im.set_data(rho_values)
+            ax.set_title(f"Time Step: {frame}")
+            return im,
+
+        ani = animation.FuncAnimation(fig, update, frames=len(grid_array),
+                                    init_func=init, blit=True)
+        ani.save('grid_animation.mp4')
+
+        plt.show()
+    # To save the animation, you can use: ani.save('grid_animation.mp4')
