@@ -11,6 +11,5 @@ def main(dt=0.1):
     # grid.animate_grids(grids)
 
 
-
 if __name__ == "__main__":
     fire.Fire(main)

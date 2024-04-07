@@ -8,6 +8,7 @@ class Solver:
     implements the paper "Real Time Fluid Dynamic" by jos stam.
     reference implementation from Mike Ash: https://mikeash.com/pyblog/fluid-simulation-for-dummies.html
     """
+
     def __init__(
         self,
         dt: float,
@@ -31,7 +32,7 @@ class Solver:
         self.plot_interval = plot_interval
 
         # minmax
-        self.min_rho =0
+        self.min_rho = 0
         self.max_rho = 0
 
         # specific to mike ash's immplementation
@@ -40,7 +41,7 @@ class Solver:
     def grid2arr(self):
         self.density = [p.rho for p in self.grid.grid]
         self.s = self.density.copy()
-        
+
         self.ux0 = [p.ux for p in self.grid.grid]
         self.uy0 = [p.uy for p in self.grid.grid]
 
@@ -64,55 +65,72 @@ class Solver:
     def step_once(self, dt):
         self.diffuse(1, self.ux0, self.ux, self.coeff_visc, dt)
         self.diffuse(2, self.uy0, self.uy, self.coeff_visc, dt)
-        
+
         self.project(self.ux0, self.uy0, self.ux, self.uy)
-        
+
         self.advect(1, self.ux, self.ux0, self.ux0, self.uy0, dt)
         self.advect(2, self.uy, self.uy0, self.ux0, self.uy0, dt)
-        
-        self.project(self.ux, self.uy, self.ux0, self.uy0);
-        
-        self.diffuse(0, self.s, self.density, self.coeff_diff, dt);
-        self.advect(0, self.density, self.s, self.ux, self.uy, dt);
+
+        self.project(self.ux, self.uy, self.ux0, self.uy0)
+
+        self.diffuse(0, self.s, self.density, self.coeff_diff, dt)
+        self.advect(0, self.density, self.s, self.ux, self.uy, dt)
 
         self.arr2grid()
-    
-
 
     def set_bnd(self, b, x):
         m = self.grid.m
         n = self.grid.n
 
-        for i in range(1,m-1):
-            x[self.get_index(i, 0)] = -x[self.get_index(i, 1)] if b == 2 else x[self.get_index(i, 1)]
-            x[self.get_index(i, n-1)] = -x[self.get_index(i, n-2)] if b == 2 else x[self.get_index(i, n-2)]  
+        for i in range(1, m - 1):
+            x[self.get_index(i, 0)] = (
+                -x[self.get_index(i, 1)] if b == 2 else x[self.get_index(i, 1)]
+            )
+            x[self.get_index(i, n - 1)] = (
+                -x[self.get_index(i, n - 2)] if b == 2 else x[self.get_index(i, n - 2)]
+            )
 
-        for j in range(1,n-1):
-            x[self.get_index(0, j)] = -x[self.get_index(1, j)] if b == 1 else x[self.get_index(1, j)]
-            x[self.get_index(m-1, j)] = -x[self.get_index(m-2, j)] if b == 1 else x[self.get_index(m-2, j)]
+        for j in range(1, n - 1):
+            x[self.get_index(0, j)] = (
+                -x[self.get_index(1, j)] if b == 1 else x[self.get_index(1, j)]
+            )
+            x[self.get_index(m - 1, j)] = (
+                -x[self.get_index(m - 2, j)] if b == 1 else x[self.get_index(m - 2, j)]
+            )
 
-        x[self.get_index(0, 0)] = 0.5 * (x[self.get_index(1, 0)] + x[self.get_index(0, 1)])
-        x[self.get_index(0, n-1)] = 0.5 * (x[self.get_index(1, n-1)] + x[self.get_index(0, n-2)])
-        x[self.get_index(m-1, 0)] = 0.5 * (x[self.get_index(m-2, 0)] + x[self.get_index(m-1, 1)])
-        x[self.get_index(m-1, n-1)] = 0.5 * (x[self.get_index(m-2, n-1)] + x[self.get_index(m-1, n-2)])
+        x[self.get_index(0, 0)] = 0.5 * (
+            x[self.get_index(1, 0)] + x[self.get_index(0, 1)]
+        )
+        x[self.get_index(0, n - 1)] = 0.5 * (
+            x[self.get_index(1, n - 1)] + x[self.get_index(0, n - 2)]
+        )
+        x[self.get_index(m - 1, 0)] = 0.5 * (
+            x[self.get_index(m - 2, 0)] + x[self.get_index(m - 1, 1)]
+        )
+        x[self.get_index(m - 1, n - 1)] = 0.5 * (
+            x[self.get_index(m - 2, n - 1)] + x[self.get_index(m - 1, n - 2)]
+        )
 
         return x
-    
+
     def lin_solve(self, b, x, x0, a, c):
         m = self.grid.m
         n = self.grid.n
         c_inv = 1.0 / c
 
         for iter in range(self.gauss_seidel_iters):
-            for j in range(1,n-1):
-                for i in range(1,m-1):
-                    x[self.get_index(i, j)] = (x0[self.get_index(i, j)]
-                            + a*(
-                                x[self.get_index(i+1, j)]
-                                +x[self.get_index(i-1, j)]
-                                +x[self.get_index(i, j+1)]
-                                +x[self.get_index(i, j-1)]
-                        )) * c_inv
+            for j in range(1, n - 1):
+                for i in range(1, m - 1):
+                    x[self.get_index(i, j)] = (
+                        x0[self.get_index(i, j)]
+                        + a
+                        * (
+                            x[self.get_index(i + 1, j)]
+                            + x[self.get_index(i - 1, j)]
+                            + x[self.get_index(i, j + 1)]
+                            + x[self.get_index(i, j - 1)]
+                        )
+                    ) * c_inv
 
             self.set_bnd(b, x)
 
@@ -120,53 +138,61 @@ class Solver:
         m = self.grid.m
         n = self.grid.n
 
-        a = dt * diff * (m - 2) * (n - 2);
-        self.lin_solve(b, x, x0, a, 1 + 4 * a);
-    
+        a = dt * diff * (m - 2) * (n - 2)
+        self.lin_solve(b, x, x0, a, 1 + 4 * a)
+
     def project(self, velocX, velocY, p, div):
         m = self.grid.m
         n = self.grid.n
 
-        for j in range(1,n-1):
-            for i in range(1,m-1):
-                div[self.get_index(i, j)] = -0.5 *(
-                        velocX[self.get_index(i+1, j)]
-                        -velocX[self.get_index(i-1, j)]
-                        +velocY[self.get_index(i  , j+1)]
-                        -velocY[self.get_index(i  , j-1)]
-                    )/n;
+        for j in range(1, n - 1):
+            for i in range(1, m - 1):
+                div[self.get_index(i, j)] = (
+                    -0.5
+                    * (
+                        velocX[self.get_index(i + 1, j)]
+                        - velocX[self.get_index(i - 1, j)]
+                        + velocY[self.get_index(i, j + 1)]
+                        - velocY[self.get_index(i, j - 1)]
+                    )
+                    / n
+                )
                 p[self.get_index(i, j)] = 0
-            
-        
-        self.set_bnd(0, div) 
+
+        self.set_bnd(0, div)
         self.set_bnd(0, p)
         self.lin_solve(0, p, div, 1, 4)
-        
-        for j in range(1,n-1):
-            for i in range(1,m-1):
-                velocX[self.get_index(i, j)] -= 0.5 * (p[self.get_index(i+1, j)]
-                                                -p[self.get_index(i-1, j)]) * self.grid.m
-                velocY[self.get_index(i, j)] -= 0.5 * (p[self.get_index(i, j+1)]
-                                                -p[self.get_index(i, j-1)]) * self.grid.n
-               
+
+        for j in range(1, n - 1):
+            for i in range(1, m - 1):
+                velocX[self.get_index(i, j)] -= (
+                    0.5
+                    * (p[self.get_index(i + 1, j)] - p[self.get_index(i - 1, j)])
+                    * self.grid.m
+                )
+                velocY[self.get_index(i, j)] -= (
+                    0.5
+                    * (p[self.get_index(i, j + 1)] - p[self.get_index(i, j - 1)])
+                    * self.grid.n
+                )
+
         self.set_bnd(1, velocX)
         self.set_bnd(2, velocY)
 
     def advect(self, b, d, d0, velocX, velocY, dt):
         m = self.grid.m
         n = self.grid.n
-        
+
         dtx = dt * (m - 2)
         dty = dt * (n - 2)
-        
-                
-        for j in range(1,n-1):
-            for i in range(1,m-1):
+
+        for j in range(1, n - 1):
+            for i in range(1, m - 1):
                 tmp1 = dtx * velocX[self.get_index(i, j)]
                 tmp2 = dty * velocY[self.get_index(i, j)]
-                x    = i - tmp1 
-                y    = j - tmp2
-                
+                x = i - tmp1
+                y = j - tmp2
+
                 if x < 0.5:
                     x = 0.5
                 if x > m + 0.5:
@@ -180,15 +206,18 @@ class Solver:
                     y = n + 0.5
                 j0 = int(y)
                 j1 = j0 + 1.0
-                
-                
+
                 s1 = x - i0
-                s0 = 1.0 - s1 
+                s0 = 1.0 - s1
                 t1 = y - j0
                 t0 = 1.0 - t1
-                
-                d[self.get_index(i, j)] = s0*(t0*d0[self.get_index(i0,j0)]+t1*d0[self.get_index(i0,j1)])+s1*(t0*d0[self.get_index(i1,j0)]+t1*d0[self.get_index(i1,j1)])
-                
+
+                d[self.get_index(i, j)] = s0 * (
+                    t0 * d0[self.get_index(i0, j0)] + t1 * d0[self.get_index(i0, j1)]
+                ) + s1 * (
+                    t0 * d0[self.get_index(i1, j0)] + t1 * d0[self.get_index(i1, j1)]
+                )
+
         self.set_bnd(b, d)
 
     # def _set_bnd(self, attr):
