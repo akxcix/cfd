@@ -1,0 +1,39 @@
+[project]
+name = "cfd"
+version = "0.0.0"
+description = "CFD simulation"
+authors = [
+    {name = "Adarsh Kumar", email = "git@akxcix.com"},
+]
+dependencies = [
+    "contourpy==1.2.0",
+    "cycler==0.12.1",
+    "fonttools==4.50.0",
+    "kiwisolver==1.4.5",
+    "matplotlib==3.8.3",
+    "numpy==1.26.4",
+    "packaging==24.0",
+    "pillow==10.2.0",
+    "pyparsing==3.1.2",
+    "python-dateutil==2.9.0.post0",
+    "six==1.16.0",
+    "alive-progress>=3.1.5",
+    "fire>=0.6.0",
+    "numba>=0.59.1",
+]
+requires-python = "==3.10.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.dev-dependencies]
+interactive = [
+    "ipython>=8.23.0",
+]
+format = [
+    "black>=24.3.0",
+    "isort>=5.13.2",
+]
