@@ -150,51 +150,37 @@ class Grid:
         plt.ylim(-0.5, self.m - 0.5)
         plt.show()
 
-    def animate_grids(self, grid_array):
+    @staticmethod
+    def plot_grids(output_file, grid_list, title="Grid Evolution", vmin=None, vmax=None):
         fig, ax = plt.subplots()
 
-        # Initialize the first frame with the first grid state
-        initial_grid = grid_array[0]
-        rho_values = np.zeros([self.m, self.n])
-        ux_values = np.zeros([self.m, self.n])
-        uy_values = np.zeros([self.m, self.n])
+        initial_grid = grid_list[0]
+        rho_values = np.zeros([initial_grid.m, initial_grid.n])
+        for x in range(initial_grid.m):
+            for y in range(initial_grid.n):
+                rho_values[x, y] = initial_grid[x, y].rho
 
-        for i in range(self.m):
-            for j in range(self.n):
-                rho_values[i, j] = initial_grid[self._index(i, j)].rho
-                ux_values[i, j] = initial_grid[self._index(i, j)].ux
-                uy_values[i, j] = initial_grid[self._index(i, j)].uy
-
-        im = ax.imshow(rho_values, origin="lower", cmap="viridis")
+        im = ax.imshow(rho_values, origin="lower", cmap="viridis", vmin=vmin, vmax=vmax)
         fig.colorbar(im, ax=ax, label="Density (rho)")
 
         def init():
-            # This could also set the figure to a consistent state if needed
             return (im,)
 
         def update(frame):
-            # Update the plot for the current frame
-            current_grid = grid_array[frame]
+            current_grid = grid_list[frame]
 
-            rho_values = np.zeros([self.m, self.n])
-            ux_values = np.zeros([self.m, self.n])
-            uy_values = np.zeros([self.m, self.n])
-
-            for i in range(self.m):
-                for j in range(self.n):
-                    rho_values[i, j] = current_grid[self._index(i, j)].rho
-                    ux_values[i, j] = current_grid[self._index(i, j)].ux
-                    uy_values[i, j] = current_grid[self._index(i, j)].uy
+            rho_values = np.zeros([current_grid.m, current_grid.n])
+            for x in range(current_grid.m):
+                for y in range(current_grid.n):
+                    rho_values[x, y] = current_grid[x, y].rho
 
             im.set_data(rho_values)
             ax.set_title(f"Time Step: {frame}")
             return (im,)
 
         ani = animation.FuncAnimation(
-            fig, update, frames=len(grid_array), init_func=init, blit=True
+            fig, update, frames=len(grid_list), init_func=init, blit=True
         )
-        ani.save("grid_animation.mp4")
+        ani.save(output_file)
 
-        plt.show()
-
-    # To save the animation, you can use: ani.save('grid_animation.mp4')
+        plt.close(fig)

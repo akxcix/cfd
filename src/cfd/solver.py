@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from numpy.typing import NDArray
 
 from .grids import Grid, GridPoint
+import copy
 
 
 class Solver:
@@ -158,8 +159,8 @@ class Solver:
 
             if (i + 1) % self.plot_interval == 0:
                 print(sum([gp.rho for gp in self.grid.grid]))
-
-                grids.append(self.grid.grid)
+                grid_copy = copy.deepcopy(self.grid)
+                grids.append(grid_copy)
 
         return grids
 
