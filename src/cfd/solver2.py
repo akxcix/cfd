@@ -64,7 +64,7 @@ class Solver:
                 if (i-int(ny/2))**2 + (j-int(nx/2))**2 < obstacle_radius**2:  
                     newgrid[i][j].v.vx = 0  
                     newgrid[i][j].v.vy = 0
-                    newgrid[i][j].p = 0  
+                    newgrid[i][j].p = -10  
                     continue
             
                 curr_spacepoint = grid[i][j]
