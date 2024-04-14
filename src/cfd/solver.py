@@ -44,6 +44,9 @@ class Solver:
         self.grid2arr()
 
     def grid2arr(self):
+        """
+        Convert the grid data to NumPy arrays for efficient computation.
+        """
         self.density = np.array([p.rho for p in self.grid.grid], dtype="f").reshape(
             self.m, self.n
         )
