@@ -71,7 +71,7 @@ def main():
     space.plot_pressure()
     # space.plot_density()
 
-    solver = Solver(space, 0.1, 1, 0.1, 10)
+    solver = Solver(space, 0.1, 1, 0.0001, 10)
     solver.solve(10000)
 
 
