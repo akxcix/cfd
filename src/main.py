@@ -45,7 +45,7 @@ def main():
     # grid_list = solver.run_simulation()
     # Grid.plot_grids(args.output_file, grid_list, title="Grid Evolution", vmin=0, vmax=1)
     
-    space = Space2d(10, 10, 20, 20)
+    space = Space2d(10, 10, 100, 100)
     # initialize_wind_tunnel(space, inlet_velocity=1.0, outlet_pressure=0.0)
 
     ball_radius = 50.0
@@ -55,8 +55,8 @@ def main():
     space.plot_pressure()
     # space.plot_density()
 
-    solver = Solver(space, 0.1,1,0.1)
-    solver.solve(1000)
+    solver = Solver(space, 0.1,1,0.1, 10)
+    solver.solve(10000)
 
 
 if __name__ == "__main__":

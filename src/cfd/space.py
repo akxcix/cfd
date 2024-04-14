@@ -26,7 +26,7 @@ class SpacePoint:
         self,
         v: Velocity = Velocity(0,0),
         rho: float = 0.1,
-        p: float = 1,
+        p: float = 0,
         is_blocked: bool = False,
     ) -> None:
         """
