@@ -38,7 +38,7 @@ def initialize_ball(space: Space2d, ball_radius: float) -> None:
 
 def main():
     parser = argparse.ArgumentParser(description="CFD Simulation")
-    parser.add_argument("--dt", type=float, default=0.1, help="Time step")
+    parser.add_argument("--dt", type=float, default=0.01, help="Time step")
     parser.add_argument("--plot", type=int, default=1, help="Plot interval")
     parser.add_argument(
         "--iterations", type=int, default=5, help="Number of iterations"
@@ -50,7 +50,7 @@ def main():
         "--grid_size",
         type=int,
         nargs=2,
-        default=[10, 10],
+        default=[100, 100],
         help="Grid size (e.g., 10 10)",
     )
 

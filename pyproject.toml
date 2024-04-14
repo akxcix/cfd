@@ -20,6 +20,7 @@ dependencies = [
     "alive-progress>=3.1.5",
     "fire>=0.6.0",
     "numba>=0.59.1",
+    "pip>=24.0",
 ]
 requires-python = "==3.10.*"
 readme = "README.md"
@@ -32,6 +33,8 @@ distribution = false
 [tool.pdm.dev-dependencies]
 interactive = [
     "ipython>=8.23.0",
+    "jupyter>=1.0.0",
+    "ipywidgets>=8.1.2",
 ]
 format = [
     "black>=24.3.0",
