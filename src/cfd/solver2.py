@@ -3,6 +3,7 @@ import copy
 import alive_progress as ap
 import numba as nb
 import numpy as np
+from matplotlib import pyplot as plt
 
 from .space import Space2d, SpacePoint
 
@@ -17,9 +18,9 @@ class Solver:
         self.F = F
 
         # V stands for velocity.
-        self.vx = [([0] * space.nx) for _ in range(space.ny)]
-        self.vy = [([0] * space.nx) for _ in range(space.ny)]
-        self.p = [([0] * space.nx) for _ in range(space.ny)]
+        self.vx = np.array([([0] * space.nx) for _ in range(space.ny)]).astype("f")
+        self.vy = np.array([([0] * space.nx) for _ in range(space.ny)]).astype("f")
+        self.p = np.array([([0] * space.nx) for _ in range(space.ny)]).astype("f")
 
         # Initialize v and p with grids
         for i in range(space.ny):
@@ -32,8 +33,11 @@ class Solver:
         self.obstacle = np.zeros([space.ny, space.nx]).astype("i")
         for i in range(space.ny):
             for j in range(space.nx):
-                if (i - int(space.ny / 2)) ** 2 + (j - int(space.nx / 2)) ** 2 < 5**2:
+                if (i - int(space.ny / 2)) ** 2 + (j - int(space.nx / 2)) ** 2 < 50**2:
                     self.obstacle[i, j] = 1
+
+        plt.imshow(self.obstacle.T)
+        plt.show()
 
     def solve(self, iters):
         import time
@@ -56,7 +60,7 @@ class Solver:
             )
             end = time.time()
             print(f"iter={iter}, time={end-start}")
-            if iter % 100 == 0:
+            if iter % 1000 == 0:
                 for i in range(self.space.ny):
                     for j in range(self.space.nx):
                         self.space.grid[i][j].v.vx = self.vx[i][j]
@@ -67,7 +71,7 @@ class Solver:
                 self.space.plot_velocity(scale=1)
 
 
-@nb.jit
+@nb.njit
 def next_step(dt, vx, vy, p, dx, dy, nx, ny, nu, rho, F, obstacle):
     dtdx = dt / dx
     dtdy = dt / dy
@@ -79,15 +83,15 @@ def next_step(dt, vx, vy, p, dx, dy, nx, ny, nu, rho, F, obstacle):
     for i in range(nx):
         for j in range(ny):
             if j == 0:
-                new_vx[i][j] = 100
+                new_vx[i][j] = 10
                 new_vy[i][j] = 0
-                new_p[i][j] = 10
+                new_p[i][j] = 1
                 continue
 
             if j == nx - 1:
                 new_vx[i][j] = new_vx[i - 1][j]
                 new_vy[i][j] = new_vy[i - 1][j]
-                new_p[i][j] = -10
+                new_p[i][j] = -1
                 continue
 
             if i == 0:
@@ -105,6 +109,7 @@ def next_step(dt, vx, vy, p, dx, dy, nx, ny, nu, rho, F, obstacle):
             # obstacle_radius = 5
             if obstacle[i][j]:
                 new_vx[i][j] = new_vy[i][j] = new_p[i][j] = 0
+                continue
 
             vx_p = (
                 vx[i][j]
