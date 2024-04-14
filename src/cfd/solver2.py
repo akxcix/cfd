@@ -1,6 +1,11 @@
-import numpy as np
-from .space import Space2d, SpacePoint
 import copy
+
+import alive_progress as ap
+import numba as nb
+import numpy as np
+
+from .space import Space2d, SpacePoint
+
 
 class Solver:
     def __init__(self, space: Space2d, nu: float, rho: float, dt: float, F: float):
@@ -11,120 +16,186 @@ class Solver:
         self.dt = dt
         self.F = F
 
-    def calc_brackets(
-            self,
-            dx,
-            dy,
-            dt,
-            rho,
-            vx_ip1_j, 
-            vx_im1_j,
-            vx_i_jp1,
-            vx_i_jm1,
-            vy_i_jp1, 
-            vy_i_jm1,
-            vy_ip1_j,
-            vy_im1_j,
-        ):
-        p1 = rho * dx**2 * dy**2 / (2*(dx**2 + dy**2))
-        t1 = (1/dt) * (((vx_ip1_j - vx_im1_j)/(2*dx)) + ((vy_i_jp1 - vy_i_jm1)/(2*dy)))
-        t2 = ((vx_ip1_j - vx_im1_j)/(2*dx))**2
-        t3 = 2 * ((vx_i_jp1 - vx_i_jm1)/(2*dy)) * ((vy_ip1_j - vy_im1_j)/(2*dx))
-        t4 = ((vy_i_jp1 - vy_i_jm1)/(2*dy))**2
+        # V stands for velocity.
+        self.vx = [([0] * space.nx) for _ in range(space.ny)]
+        self.vy = [([0] * space.nx) for _ in range(space.ny)]
+        self.p = [([0] * space.nx) for _ in range(space.ny)]
 
-        return p1 * (t1-t2-t3-t4)
+        # Initialize v and p with grids
+        for i in range(space.ny):
+            for j in range(space.nx):
+                self.vx[i][j] = space.grid[i][j].v.vx
+                self.vy[i][j] = space.grid[i][j].v.vy
+                self.p[i][j] = space.grid[i][j].p
+        # print(self.p)
 
-    def next_step(self, dt, grid, dx, dy, nx, ny, nu, rho, F):
-        dtdx = (dt/dx)
-        dtdy = (dt/dy)
+        self.obstacle = np.zeros([space.ny, space.nx]).astype("i")
+        for i in range(space.ny):
+            for j in range(space.nx):
+                if (i - int(space.ny / 2)) ** 2 + (j - int(space.nx / 2)) ** 2 < 5**2:
+                    self.obstacle[i, j] = 1
 
-        newgrid = copy.deepcopy(grid)
+    def next_step(self, dt, vx, vy, p, dx, dy, nx, ny, nu, rho, F):
+        dtdx = dt / dx
+        dtdy = dt / dy
+
+        new_vx = vx.copy()
+        new_vy = vy.copy()
+        new_p = p.copy()
 
         for i in range(nx):
             for j in range(ny):
                 if j == 0:
-                    newgrid[i][j].v.vx = 100
-                    newgrid[i][j].v.vy = 0
-                    newgrid[i][j].p = 10
+                    new_vx[i][j] = 100
+                    new_vy[i][j] = 0
+                    new_p[i][j] = 10
                     continue
 
-                if j == nx-1: 
-                    newgrid[i][j].v.vx = newgrid[i-1][j].v.vx  
-                    newgrid[i][j].v.vy = newgrid[i-1][j].v.vy
-                    newgrid[i][j].p = -10  
+                if j == nx - 1:
+                    new_vx[i][j] = new_vx[i - 1][j]
+                    new_vy[i][j] = new_vy[i - 1][j]
+                    new_p[i][j] = -10
                     continue
 
-                if i == 0 or i == ny-1:  
-                    newgrid[i][j].v.vx = 0 
-                    newgrid[i][j].v.vy = 0
-                    newgrid[i][j].p = newgrid[i-1][j].p if i == ny-1 else newgrid[i+1][j].p  
+                if i == 0:
+                    new_vx[i][j] = 0
+                    new_vy[i][j] = 0
+                    new_p[i][j] = new_p[i + 1][j]
                     continue
 
-                obstacle_radius = 5
-                if (i-int(ny/2))**2 + (j-int(nx/2))**2 < obstacle_radius**2:  
-                    newgrid[i][j].v.vx = 0  
-                    newgrid[i][j].v.vy = 0
-                    newgrid[i][j].p = 0  
+                if i == ny - 1:
+                    new_vx[i][j] = 0
+                    new_vy[i][j] = 0
+                    new_p[i][j] = new_p[i - 1][j]
                     continue
-            
-                curr_spacepoint = grid[i][j]
-                vx = curr_spacepoint.v.vx
-                vy = curr_spacepoint.v.vy
-                p = curr_spacepoint.p
 
-                vx_p = vx \
-                    - vx * dtdx * (vx - grid[i-1][j].v.vx) \
-                    - vy * dtdy * (vx - grid[i][j-1].v.vx) \
-                    - (dtdx/(2*rho)) * (grid[i+1][j].p - grid[i-1][j].p) \
-                    + nu * ((dtdx/dx)*(grid[i+1][j].v.vx + grid[i-1][j].v.vx - 2*vx)) \
-                    + nu * ((dtdy/dy)*(grid[i][j+1].v.vx + grid[i][j-1].v.vx - 2*vx)) \
-                    + dt*F
+                # obstacle_radius = 5
+                if self.obstacle[i][j]:
+                    new_vx[i][j] = new_vy[i][j] = new_p[i][j] = 0
 
-                vy_p = vy \
-                    - vx * dtdx * (vy - grid[i-1][j].v.vy) \
-                    - vy * dtdy * (vy - grid[i][j-1].v.vy) \
-                    - (dtdy/(2*rho)) * (grid[i][j+1].p - grid[i][j-1].p) \
-                    + nu * ((dtdx/dx)*(grid[i+1][j].v.vy + grid[i-1][j].v.vy - 2*vy)) \
-                    + nu * ((dtdy/dy)*(grid[i][j+1].v.vy + grid[i][j-1].v.vy - 2*vy))
-                
-                p_p = (((grid[i+1][j].p + grid[i-1][j].p)*dy*dy + (grid[i][j+1].p + grid[i][j-1].p)*dx*dx)/(2 * (dx**2 +dy**2))) \
-                    - self.calc_brackets(
-                        dx, 
-                        dy, 
-                        dt,
-                        rho,
-                        grid[i+1][j].v.vx,
-                        grid[i-1][j].v.vx,
-                        grid[i][j+1].v.vx,
-                        grid[i][j-1].v.vx,
-                        grid[i][j+1].v.vy,
-                        grid[i][j-1].v.vy,
-                        grid[i+1][j].v.vy,
-                        grid[i+1][j].v.vy,
+                vx_p = (
+                    vx[i][j]
+                    - vx[i][j] * dtdx * (vx[i][j] - vx[i - 1][j])
+                    - vy[i][j] * dtdy * (vx[i][j] - vx[i][j - 1])
+                    - (dtdx / (2 * rho)) * (p[i + 1][j] - p[i - 1][j])
+                    + nu * ((dtdx / dx) * (vx[i + 1][j] + vx[i - 1][j] - 2 * vx[i][j]))
+                    + nu * ((dtdy / dy) * (vx[i][j + 1] + vx[i][j - 1] - 2 * vx[i][j]))
+                    + dt * F
+                )
+
+                vy_p = (
+                    vy[i][j]
+                    - vx[i][j] * dtdx * (vy[i][j] - vy[i - 1][j])
+                    - vy[i][j] * dtdy * (vy[i][j] - vy[i][j - 1])
+                    - (dtdy / (2 * rho)) * (p[i][j + 1] - p[i][j - 1])
+                    + nu * ((dtdx / dx) * (vy[i + 1][j] + vy[i - 1][j] - 2 * vy[i][j]))
+                    + nu * ((dtdy / dy) * (vy[i][j + 1] + vy[i][j - 1] - 2 * vy[i][j]))
+                )
+
+                p_p = (
+                    (
+                        (p[i + 1][j] + p[i - 1][j]) * dy * dy
+                        + (p[i][j + 1] + p[i][j - 1]) * dx * dx
                     )
-                
-                newgrid[i][j].v.vx = vx_p
-                newgrid[i][j].v.vy = vy_p
-                newgrid[i][j].p = p_p
+                    / (2 * (dx**2 + dy**2))
+                ) - calc_brackets(
+                    dx,
+                    dy,
+                    dt,
+                    rho,
+                    vx[i + 1][j],
+                    vx[i - 1][j],
+                    vx[i][j + 1],
+                    vx[i][j - 1],
+                    vy[i][j + 1],
+                    vy[i][j - 1],
+                    vy[i + 1][j],
+                    vy[i + 1][j],
+                )
 
-        return newgrid
-    
+                new_vx[i][j] = vx_p
+                new_vy[i][j] = vy_p
+                new_p[i][j] = p_p
+
+        return new_vx, new_vy, new_p
+
+    def solve_2(self, iters):
+        for iter in ap.alive_it(range(iters)):
+            self.next_step_2()
+
+            if iter % 1 == 0:
+                for i in range(self.space.ny):
+                    for j in range(self.space.nx):
+                        self.space.grid[i][j].v.vx = self.v[i, j, 0]
+                        self.space.grid[i][j].v.vy = self.v[i, j, 1]
+                        self.space.grid[i][j].p = self.p[i, j]
+
+                print(self.p)
+                self.space.plot_pressure()
+                self.space.plot_velocity(scale=1)
+
     def solve(self, iters):
         for iter in range(iters):
-            newgrid = self.next_step(
+            self.vx, self.vy, self.p = self.next_step(
                 self.dt,
-                self.space.grid,
+                self.vx,
+                self.vy,
+                self.p,
                 self.space.dx,
                 self.space.dy,
                 self.space.nx,
                 self.space.ny,
                 self.nu,
                 self.rho,
-                self.F
+                self.F,
             )
-            self.space.grid = newgrid
 
             if iter % 100 == 0:
+                for i in range(self.space.ny):
+                    for j in range(self.space.nx):
+                        self.space.grid[i][j].v.vx = self.vx[i, j]
+                        self.space.grid[i][j].v.vy = self.vy[i, j]
+                        self.space.grid[i][j].p = self.p[i, j]
+
                 self.space.plot_pressure()
                 self.space.plot_velocity(scale=1)
 
+
+# @nb.njit
+def calc_brackets(
+    dx,
+    dy,
+    dt,
+    rho,
+    vx_ip1_j,
+    vx_im1_j,
+    vx_i_jp1,
+    vx_i_jm1,
+    vy_i_jp1,
+    vy_i_jm1,
+    vy_ip1_j,
+    vy_im1_j,
+):
+    print(
+        dx,
+        dy,
+        dt,
+        rho,
+        vx_ip1_j,
+        vx_im1_j,
+        vx_i_jp1,
+        vx_i_jm1,
+        vy_i_jp1,
+        vy_i_jm1,
+        vy_ip1_j,
+        vy_im1_j,
+    )
+    p1 = rho * dx**2 * dy**2 / (2 * (dx**2 + dy**2))
+    t1 = (1 / dt) * (
+        ((vx_ip1_j - vx_im1_j) / (2 * dx)) + ((vy_i_jp1 - vy_i_jm1) / (2 * dy))
+    )
+    t2 = ((vx_ip1_j - vx_im1_j) / (2 * dx)) ** 2
+    t3 = 2 * ((vx_i_jp1 - vx_i_jm1) / (2 * dy)) * ((vy_ip1_j - vy_im1_j) / (2 * dx))
+    t4 = ((vy_i_jp1 - vy_i_jm1) / (2 * dy)) ** 2
+
+    return p1 * (t1 - t2 - t3 - t4)
