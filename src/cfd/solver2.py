@@ -30,13 +30,21 @@ class Solver:
                 self.p[i][j] = space.grid[i][j].p
         # print(self.p)
 
-        self.obstacle = np.zeros([space.ny, space.nx]).astype("i")
-        for i in range(space.ny):
-            for j in range(space.nx):
-                if (i - int(space.ny / 2)) ** 2 + (j - int(space.nx / 2)) ** 2 < 50**2:
-                    self.obstacle[i, j] = 1
-
-        plt.imshow(self.obstacle.T)
+        # self.obstacle = np.zeros([space.ny, space.nx]).astype("i")
+        # for i in range(space.ny):
+        #     for j in range(space.nx):
+        #         if (i - int(space.ny / 2)) ** 2 + (j - int(space.nx / 2)) ** 2 < 50**2:
+        #             self.obstacle[i, j] = 1
+        self.obstacle = as_grid(
+            x_min=-0.1,
+            x_max=1.1,
+            y_min=-3,
+            y_max=3,
+            x_points=space.nx,
+            y_points=space.ny,
+            params=[0, 0, 0, 0, 0],
+        )[::-1]
+        plt.imshow(self.obstacle)
         plt.show()
 
     def solve(self, iters):
@@ -196,3 +204,54 @@ def calc_brackets(
     t4 = ((vy_i_jp1 - vy_i_jm1) / (2 * dy)) ** 2
 
     return p1 * (t1 - t2 - t3 - t4)
+
+
+CS = 0.2969
+C1 = -0.1260
+C2 = -0.3516
+C3 = 0.2843
+C4 = -0.1015
+
+
+def f(x, cs=CS, c1=C1, c2=C2, c3=C3, c4=C4):
+    return cs * np.sqrt(x) + c1 * x + c2 * x**2 + c3 * x**3 + c4 * x**4
+
+
+def g(x, a, b, c, d, e):
+    return x * (x - 1) * (a * x**0.5 + b + c * x + d * x**2 + e * x**3)
+
+
+def g_(x, a, b, c, d, e, add):
+    gv = g(x, a, b, c, d, e)
+    fv = f(x) * 2
+
+    if add:
+        return gv + fv
+    else:
+        return gv - fv
+
+
+def as_grid(
+    *,
+    x_min: float = 0,
+    x_max: float = 1,
+    y_min: float = -1,
+    y_max: float = 1,
+    x_points: int = 100,
+    y_points: int = 1000,
+    params: np.ndarray | list[float],
+):
+    x_linspace = np.linspace(x_min, x_max, x_points)
+    y_linspace = np.linspace(y_min, y_max, y_points)
+
+    # print(x_linspace)
+    upper = g_(x_linspace, *params, True)
+    lower = g_(x_linspace, *params, False)
+
+    outputs = (
+        np.ones([len(x_linspace), len(y_linspace)], dtype=int)
+        & (y_linspace[np.newaxis, :] <= upper[:, np.newaxis])
+        & (y_linspace[np.newaxis, :] >= lower[:, np.newaxis])
+    ).astype("i")
+    assert outputs.shape == (len(x_linspace), len(y_linspace))
+    return outputs
