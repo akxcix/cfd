@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.22)
 
 include(cmake/prelude.cmake)
 
@@ -59,6 +59,14 @@ target_compile_features(cfd_cfd PUBLIC cxx_std_17)
 
 find_package(fmt REQUIRED)
 target_link_libraries(cfd_cfd PRIVATE fmt::fmt)
+
+find_package(Python COMPONENTS Interpreter Development)
+find_package(pybind11 CONFIG)
+
+# pybind11 method:
+pybind11_add_module(cfd_py source/python.cxx)
+target_compile_definitions(cfd_py
+                           PRIVATE VERSION_INFO=${VERSION_INFO})
 
 # ---- Install rules ----
 

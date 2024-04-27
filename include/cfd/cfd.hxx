@@ -21,7 +21,7 @@
  * C4251 is emitted when an exported class has a non-static data member of a
  * non-exported class type.
  *
- * The exported class in our case is the class below (exported_class), which
+ * The exported class in our case is the class below (Cfd), which
  * has a non-static data member (m_name) of a non-exported class type
  * (std::string).
  *
@@ -51,12 +51,12 @@
  *
  * Please see the note above for considerations when creating shared libraries.
  */
-class CFD_EXPORT exported_class {
+class CFD_EXPORT Cfd {
 public:
   /**
    * @brief Initializes the name field to the name of the project
    */
-  exported_class();
+  Cfd();
 
   /**
    * @brief Returns a non-owning pointer to the string stored in this class

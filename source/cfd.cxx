@@ -4,9 +4,9 @@
 
 #include <fmt/core.h>
 
-exported_class::exported_class()
+Cfd::Cfd()
     : m_name {fmt::format("{}", "cfd")} {}
 
-auto exported_class::name() const -> char const* {
+auto Cfd::name() const -> char const* {
   return m_name.c_str();
 }
