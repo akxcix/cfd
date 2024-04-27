@@ -1,8 +1,8 @@
 set(
     FORMAT_PATTERNS
-    source/*.cpp source/*.hpp
-    include/*.hpp
-    test/*.cpp test/*.hpp
+    source/*.cxx source/*.hxx
+    include/*.hxx
+    test/*.cxx test/*.hxx
     CACHE STRING
     "; separated patterns relative to the project source dir to format"
 )
