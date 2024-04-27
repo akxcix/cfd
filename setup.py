@@ -36,7 +36,8 @@ class CMakeBuild(build_ext):
 
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
         cfg = "Debug" if debug else "Release"
-        VCPKG_CMAKE = os.environ["VCPKG_CMAKE"]
+        VCPKG_ROOT = os.environ["VCPKG_ROOT"]
+        VCPKG_CMAKE = f"{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
 
         # CMake lets you override the generator - we need to check this.
         # Can be set with Conda-Build, for example.
