@@ -1,39 +1,50 @@
-[project]
-name = "cfd"
-version = "0.0.0"
-description = "CFD simulation"
-authors = [
-    {name = "Adarsh Kumar", email = "git@akxcix.com"},
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "ninja",
+    "cmake>=3.22",
 ]
-dependencies = [
-    "contourpy==1.2.0",
-    "cycler==0.12.1",
-    "fonttools==4.50.0",
-    "kiwisolver==1.4.5",
-    "matplotlib==3.8.3",
-    "numpy==1.26.4",
-    "packaging==24.0",
-    "pillow==10.2.0",
-    "pyparsing==3.1.2",
-    "python-dateutil==2.9.0.post0",
-    "six==1.16.0",
-    "alive-progress>=3.1.5",
-    "fire>=0.6.0",
-    "numba>=0.59.1",
-]
-requires-python = "==3.10.*"
-readme = "README.md"
-license = {text = "MIT"}
+build-backend = "setuptools.build_meta"
+
+[tool.mypy]
+files = "setup.py"
+python_version = "3.7"
+strict = true
+show_error_codes = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["ninja"]
+ignore_missing_imports = true
 
 
-[tool.pdm]
-distribution = false
-
-[tool.pdm.dev-dependencies]
-interactive = [
-    "ipython>=8.23.0",
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
+xfail_strict = true
+filterwarnings = [
+    "error",
+    "ignore:(ast.Str|Attribute s|ast.NameConstant|ast.Num) is deprecated:DeprecationWarning:_pytest",
 ]
-format = [
-    "black>=24.3.0",
-    "isort>=5.13.2",
+testpaths = ["tests"]
+
+[tool.cibuildwheel]
+test-command = "pytest {project}/tests"
+test-extras = ["test"]
+test-skip = ["*universal2:arm64"]
+# Setuptools bug causes collision between pypy and cpython artifacts
+before-build = "rm -rf {project}/build"
+
+[tool.ruff]
+target-version = "py37"
+
+[tool.ruff.lint]
+extend-select = [
+  "B",    # flake8-bugbear
+  "I",    # isort
+  "PGH",  # pygrep-hooks
+  "RUF",  # Ruff-specific
+  "UP",   # pyupgrade
 ]
