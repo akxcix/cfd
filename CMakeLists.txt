@@ -5,7 +5,7 @@ include(cmake/prelude.cmake)
 project(
     cfd
     VERSION 0.1.0
-    DESCRIPTION "Automated Airfoil Design"
+    DESCRIPTION "Automatic Airfoil Discovery"
     HOMEPAGE_URL "cfd.com"
     LANGUAGES CXX
 )
@@ -16,36 +16,63 @@ include(cmake/variables.cmake)
 # ---- Declare library ----
 
 add_library(
-    cfd_lib OBJECT
-    source/lib.cxx
+    cfd_cfd
+    source/cfd.cxx
+)
+add_library(cfd::cfd ALIAS cfd_cfd)
+
+include(GenerateExportHeader)
+generate_export_header(
+    cfd_cfd
+    BASE_NAME cfd
+    EXPORT_FILE_NAME export/cfd/cfd_export.hxx
+    CUSTOM_CONTENT_FROM_VARIABLE pragma_suppress_c4251
+)
+
+if(NOT BUILD_SHARED_LIBS)
+  target_compile_definitions(cfd_cfd PUBLIC CFD_STATIC_DEFINE)
+endif()
+
+set_target_properties(
+    cfd_cfd PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
+    VERSION "${PROJECT_VERSION}"
+    SOVERSION "${PROJECT_VERSION_MAJOR}"
+    EXPORT_NAME cfd
+    OUTPUT_NAME cfd
 )
 
 target_include_directories(
-    cfd_lib ${warning_guard}
+    cfd_cfd ${warning_guard}
     PUBLIC
-    "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>"
+    "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
 )
 
-target_compile_features(cfd_lib PUBLIC cxx_std_17)
+target_include_directories(
+    cfd_cfd SYSTEM
+    PUBLIC
+    "\$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/export>"
+)
+
+target_compile_features(cfd_cfd PUBLIC cxx_std_17)
 
 find_package(fmt REQUIRED)
-target_link_libraries(cfd_lib PRIVATE fmt::fmt)
-
-# ---- Declare executable ----
-
-add_executable(cfd_exe source/main.cxx)
-add_executable(cfd::exe ALIAS cfd_exe)
-
-set_property(TARGET cfd_exe PROPERTY OUTPUT_NAME cfd)
-
-target_compile_features(cfd_exe PRIVATE cxx_std_17)
-
-target_link_libraries(cfd_exe PRIVATE cfd_lib)
+target_link_libraries(cfd_cfd PRIVATE fmt::fmt)
 
 # ---- Install rules ----
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)
   include(cmake/install-rules.cmake)
+endif()
+
+# ---- Examples ----
+
+if(PROJECT_IS_TOP_LEVEL)
+  option(BUILD_EXAMPLES "Build examples tree." "${cfd_DEVELOPER_MODE}")
+  if(BUILD_EXAMPLES)
+    add_subdirectory(example)
+  endif()
 endif()
 
 # ---- Developer mode ----

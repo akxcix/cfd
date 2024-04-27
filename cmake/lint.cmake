@@ -12,6 +12,7 @@ default(
     source/*.cxx source/*.hxx
     include/*.hxx
     test/*.cxx test/*.hxx
+    example/*.cxx example/*.hxx
 )
 default(FIX NO)
 

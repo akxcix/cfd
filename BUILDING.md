@@ -60,5 +60,34 @@ multi-configuration generator, like the Visual Studio ones:
 cmake --install build --config Release
 ```
 
+### CMake package
+
+This project exports a CMake package to be used with the [`find_package`][3]
+command of CMake:
+
+* Package name: `cfd`
+* Target name: `cfd::cfd`
+
+Example usage:
+
+```cmake
+find_package(cfd REQUIRED)
+# Declare the imported target as a build requirement using PRIVATE, where
+# project_target is a target created in the consuming project
+target_link_libraries(
+    project_target PRIVATE
+    cfd::cfd
+)
+```
+
+### Note to packagers
+
+The `CMAKE_INSTALL_INCLUDEDIR` is set to a path other than just `include` if
+the project is configured as a top level project to avoid indirectly including
+other libraries when installed to a common prefix. Please review the
+[install-rules.cmake](cmake/install-rules.cmake) file for the full set of
+install rules.
+
 [1]: https://cmake.org/download/
 [2]: https://cmake.org/cmake/help/latest/manual/cmake.1.html#install-a-project
+[3]: https://cmake.org/cmake/help/latest/command/find_package.html

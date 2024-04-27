@@ -5,13 +5,6 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
-add_custom_target(
-    run-exe
-    COMMAND cfd_exe
-    VERBATIM
-)
-add_dependencies(run-exe cfd_exe)
-
 option(BUILD_MCSS_DOCS "Build documentation using Doxygen and m.css" OFF)
 if(BUILD_MCSS_DOCS)
   include(cmake/docs.cmake)

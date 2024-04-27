@@ -1,8 +1,10 @@
-#include <catch2/catch_test_macros.hxx>
+#include <string>
 
-#include "lib.hxx"
+#include "cfd/cfd.hxx"
+
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("Name is cfd", "[library]") {
-  auto const lib = library {};
-  REQUIRE(lib.name == "cfd");
+  auto const exported = exported_class {};
+  REQUIRE(std::string("cfd") == exported.name());
 }

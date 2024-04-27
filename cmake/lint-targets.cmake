@@ -3,6 +3,7 @@ set(
     source/*.cxx source/*.hxx
     include/*.hxx
     test/*.cxx test/*.hxx
+    example/*.cxx example/*.hxx
     CACHE STRING
     "; separated patterns relative to the project source dir to format"
 )
