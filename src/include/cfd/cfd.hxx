@@ -52,18 +52,18 @@
  * Please see the note above for considerations when creating shared libraries.
  */
 class CFD_EXPORT Cfd {
-public:
-  /**
-   * @brief Initializes the name field to the name of the project
-   */
-  Cfd();
+  public:
+    /**
+     * @brief Initializes the name field to the name of the project
+     */
+    Cfd();
 
-  /**
-   * @brief Returns a non-owning pointer to the string stored in this class
-   */
-  auto name() const -> char const*;
+    /**
+     * @brief Returns a non-owning pointer to the string stored in this class
+     */
+    auto name() const -> char const*;
 
-private:
-  CFD_SUPPRESS_C4251
-  std::string m_name;
+  private:
+    CFD_SUPPRESS_C4251
+    std::string m_name;
 };

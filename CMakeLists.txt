@@ -64,8 +64,8 @@ find_package(Python COMPONENTS Interpreter Development)
 find_package(pybind11 CONFIG)
 
 # pybind11 method:
-pybind11_add_module(cfd_py src/cxx/python.cxx)
-target_compile_definitions(cfd_py
+pybind11_add_module(_cfd src/cxx/python.cxx)
+target_compile_definitions(_cfd
                            PRIVATE VERSION_INFO=${VERSION_INFO})
 
 # ---- Install rules ----

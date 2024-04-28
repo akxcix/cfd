@@ -12,7 +12,7 @@ std::string some_string() {
     return "pybind is working";
 }
 
-PYBIND11_MODULE(cfd_py, m) {
+PYBIND11_MODULE(_cfd, m) {
     m.doc() = "pybind11 example plugin";  // optional module docstring
 
     m.def("add", &add, "A function that adds two numbers");
