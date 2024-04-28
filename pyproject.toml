@@ -1,10 +1,5 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel",
-    "ninja",
-    "cmake>=3.22",
-]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.mypy]
@@ -48,3 +43,29 @@ extend-select = [
   "RUF",  # Ruff-specific
   "UP",   # pyupgrade
 ]
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.dev-dependencies]
+debug = [
+    "ipython>=8.24.0",
+]
+dev = [
+    "setuptools>=69.5.1",
+    "ninja>=1.11.1.1",
+]
+[project]
+name = "cfd"
+version = "0.1.0"
+description = "Automated Airfoil Design"
+authors = [
+    {name = "Adarsh Kumar", email = "git@akxcix.com"},
+    {name = "RenChu Wang", email = "patrick1031wang@gmail.com"},
+]
+dependencies = [
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "MIT"}
+

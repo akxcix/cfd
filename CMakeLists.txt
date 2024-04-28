@@ -17,7 +17,7 @@ include(cmake/variables.cmake)
 
 add_library(
     cfd_cfd
-    source/cfd.cxx
+    src/cxx/cfd.cxx
 )
 add_library(cfd::cfd ALIAS cfd_cfd)
 
@@ -46,7 +46,7 @@ set_target_properties(
 target_include_directories(
     cfd_cfd ${warning_guard}
     PUBLIC
-    "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+    "\$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/include>"
 )
 
 target_include_directories(
@@ -64,7 +64,7 @@ find_package(Python COMPONENTS Interpreter Development)
 find_package(pybind11 CONFIG)
 
 # pybind11 method:
-pybind11_add_module(cfd_py source/python.cxx)
+pybind11_add_module(cfd_py src/cxx/python.cxx)
 target_compile_definitions(cfd_py
                            PRIVATE VERSION_INFO=${VERSION_INFO})
 

@@ -8,5 +8,5 @@ Cfd::Cfd()
     : m_name {fmt::format("{}", "cfd")} {}
 
 auto Cfd::name() const -> char const* {
-  return m_name.c_str();
+    return m_name.c_str();
 }

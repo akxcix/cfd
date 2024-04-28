@@ -1,6 +1,6 @@
 set(
     FORMAT_PATTERNS
-    source/*.cxx source/*.hxx
+    src/cxx/*.cxx src/cxx/*.hxx
     include/*.hxx
     test/*.cxx test/*.hxx
     example/*.cxx example/*.hxx

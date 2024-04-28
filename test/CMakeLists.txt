@@ -17,7 +17,7 @@ include(Catch)
 
 # ---- Tests ----
 
-add_executable(cfd_test source/cfd_test.cxx)
+add_executable(cfd_test src/cxx/cfd_test.cxx)
 target_link_libraries(
     cfd_test PRIVATE
     cfd::cfd
