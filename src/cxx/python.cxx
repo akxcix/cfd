@@ -2,6 +2,8 @@
 
 #include <pybind11/pybind11.h>
 
+#include "cfd/node.hxx"
+
 namespace py = pybind11;
 
 int add(int i, int j) {
@@ -18,4 +20,6 @@ PYBIND11_MODULE(_cfd, m) {
     m.def("add", &add, "A function that adds two numbers");
 
     m.def("some_string", &some_string, "A function that returns something");
+
+    py::class_<Cell>(m, "Cell").def(py::init<>()).def("name", &Cell::name);
 }

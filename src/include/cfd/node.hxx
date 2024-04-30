@@ -2,12 +2,12 @@
 
 #include <string>
 
-class Cfd {
+class Cell {
   public:
     /**
      * @brief Initializes the name field to the name of the project
      */
-    Cfd();
+    Cell();
 
     /**
      * @brief Returns a non-owning pointer to the string stored in this class

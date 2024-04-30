@@ -65,6 +65,8 @@ authors = [
     {name = "RenChu Wang", email = "patrick1031wang@gmail.com"},
 ]
 dependencies = [
+    "numpy>=1.26.4",
+    "matplotlib>=3.8.4",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
