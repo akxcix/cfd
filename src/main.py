@@ -203,7 +203,7 @@ class Optimizer(Protocol):
     def ask(self) -> NDArray: ...
 
     @abc.abstractmethod
-    def tell(self, solutions: list[Tuple[NDArray, float]]) -> None: ...
+    def tell(self, solutions: Tuple[NDArray, float]) -> None: ...
 
     @abc.abstractmethod
     def total(self) -> int: ...
@@ -214,13 +214,18 @@ class CMAOptimizer(Optimizer):
         super().__init__()
 
         self._loop = loops
-        self._cma = CMA(mean=np.zeros(5), sigma=0.2, population_size=population_size)
+        self._cma = CMA(mean=np.zeros([5]), sigma=0.2, population_size=population_size)
+        self._history = []
 
     def ask(self) -> NDArray:
         return self._cma.ask()
 
     def tell(self, solutions: Tuple[NDArray, float]) -> None:
-        self._cma.tell([solutions])
+        self._history.append(solutions)
+        if len(self._history) == self._cma.population_size:
+            print(self._history)
+            self._cma.tell(self._history)
+            self._history = []
 
     def total(self) -> int:
         return self._loop * self._cma.population_size
@@ -289,21 +294,21 @@ class AxOptimizer(Optimizer):
     def total(self) -> int:
         return self._total
 
-def run(algo):
-    if algo == 'cma':
+
+def main(algo: str):
+    if algo == "cma":
         optimizer = CMAOptimizer()
-    elif algo == 'ax':
+    elif algo == "ax":
         optimizer = AxOptimizer()
     else:
         raise ValueError(f"Unknown algorithm {algo}")
 
-    for generation in ap.alive_it(optimizer.total()):
-        solutions = []
+    for generation in ap.alive_it(range(optimizer.total())):
         x = optimizer.ask()
         value = run(x)
-        solutions.append((x, value))
         print(f"#{generation} {value} (x={x})")
-        optimizer.tell(solutions)
+        optimizer.tell((x, value))
+
 
 if __name__ == "__main__":
-
+    fire.Fire(main)
